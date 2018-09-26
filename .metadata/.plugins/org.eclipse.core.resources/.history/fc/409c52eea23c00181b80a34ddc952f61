@@ -1,0 +1,507 @@
+import java.util.Scanner;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+
+public class MultipleSpellings {
+	
+	private static final int TOTAL_WORDS = 716;
+	private static final int DICTIONARY_SIZE = 500000;
+	
+	public static void main(String[] args) {
+		
+		int size_of_dict = 0;
+		int misspelt_count = 0;
+		int correct_count = 0;
+		
+		String misspelt[] = new String[TOTAL_WORDS];
+		String corrected[] = new String[TOTAL_WORDS];
+		String dict[] = new String[DICTIONARY_SIZE];
+		
+		try {
+			File misspell = new File("src/misspell.txt");
+			Scanner input = new Scanner(misspell);
+			
+			while (input.hasNextLine()) {
+				misspelt[misspelt_count] = input.nextLine();
+				misspelt_count++;
+			}
+			input.close();
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		try {
+			File correct = new File("src/correct.txt");
+			Scanner input = new Scanner(correct);
+			
+			while (input.hasNextLine()) {
+				corrected[correct_count] = input.nextLine();
+				correct_count++;
+			}
+			input.close();
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		try {
+			File dictionary = new File("src/dictionary.txt");
+			Scanner input = new Scanner(dictionary);
+			
+			while (input.hasNextLine()) {
+				dict[size_of_dict] = input.nextLine();
+				size_of_dict++;
+			}
+			input.close();
+			
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		//calculateLeven(misspelt, dict, corrected, misspelt_count, correct_count, size_of_dict);
+		//calculateDamerau(misspelt, dict, corrected, misspelt_count, correct_count, size_of_dict);
+		calculatebiGram(misspelt, dict, corrected, misspelt_count, correct_count, size_of_dict);
+		//calculatetriGram(misspelt, dict, corrected, misspelt_count, correct_count, size_of_dict);
+		//calculateHybrid(misspelt, dict, corrected, misspelt_count, correct_count, size_of_dict);
+	}
+
+	public static void calculateLeven(String[] misspelt, String[] dict, String[] corrected, int misspelt_count,
+			int correct_count, int size_of_dict) {
+		
+		try {
+			System.setOut(new PrintStream(new FileOutputStream("output/multi/Leven-output.txt")));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		long startTime = System.currentTimeMillis(); //start timer
+		
+		int count;
+		double dist, min;
+		
+		Levenshtein editDistance = new Levenshtein();
+		
+		String matched[][] = new String[TOTAL_WORDS][TOTAL_WORDS];
+		int position[] = new int[misspelt_count];
+		
+		//Calculates the Levenshtein distance between each mis-spelt word and dictionary entry
+		for (int i = 0; i < misspelt_count; i++) {
+			min = editDistance.score(misspelt[i], dict[0]);
+			for (int j = 1; j < size_of_dict; j++) {
+				dist = editDistance.score(misspelt[i], dict[j]);
+				//Record best match
+				if (min > dist) {
+					matched[i][0] = dict[j];
+					min = dist;
+					position[i] = j;
+				}
+			}
+		}
+		
+		//Find all other best matches
+		for (int i = 0; i < misspelt_count; i++) {
+			count = 0;
+			min = editDistance.score(misspelt[i], matched[i][count]);
+			for (int j = position[i] + 1; j < size_of_dict; j++) {
+				dist = editDistance.score(misspelt[i], dict[j]);
+				if (min == dist) {
+					count++;
+					matched[i][count] = dict[j];
+				}
+			}
+		}
+		
+		double right = 0.0, sum = 0.0;
+		char result;
+		//Calculate precision
+		System.out.format("%-20s %-20s %-20s %-5s%n%n", "Misspelt", "Predicted", "Correct", "Match");
+		for (int i = 0; i < misspelt_count; i++) {
+			count = 0;
+			while (matched[i][count] !=  null) {
+				if (corrected[i].equals(matched[i][count])) {
+					right = right + 1.0;
+					result = 'Y';
+				} else {
+					result = 'N';
+				}
+				sum = sum + 1.0;
+				System.out.format("%-20s %-20s %-20s %-7c%n", misspelt[i], matched[i][count], corrected[i], result);
+				count++;
+			}
+		}
+		
+		long stopTime = System.currentTimeMillis(); //stop timer
+		long elapsedTime = stopTime - startTime; //record time taken
+		double seconds = (double) elapsedTime / 1000;
+		
+		double precision = right/sum;
+		double recall = right/misspelt_count;
+		double avg_pred = sum/misspelt_count;
+		
+		System.out.format("Precision: %.4f%n", precision);
+		System.out.format("Recall: %.4f%n", recall);
+		System.out.format("Average Predictions: %.4f%n", avg_pred);
+		System.out.format("Time Elapsed: %.1f%n", seconds);
+		
+		System.setOut(System.out);
+	}
+	
+	public static void calculateDamerau(String[] misspelt, String[] dict, String[] corrected, int misspelt_count,
+			int correct_count, int size_of_dict) {
+		
+		try {
+			System.setOut(new PrintStream(new FileOutputStream("output/multi/Damerau-output.txt")));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		long startTime = System.currentTimeMillis(); //start timer
+		
+		int count;
+		double dist, min;
+		
+		Damerau editDistance = new Damerau();
+		
+		String matched[][] = new String[TOTAL_WORDS][TOTAL_WORDS];
+		int position[] = new int[misspelt_count];
+		
+		//Calculates the Levenshtein distance between each mis-spelt word and dictionary entry
+		for (int i = 0; i < misspelt_count; i++) {
+			min = editDistance.score(misspelt[i], dict[0]);
+			for (int j = 1; j < size_of_dict; j++) {
+				dist = editDistance.score(misspelt[i], dict[j]);
+				//Record best match
+				if (min > dist) {
+					matched[i][0] = dict[j];
+					min = dist;
+					position[i] = j;
+				}
+			}
+		}
+		
+		//Find all other best matches
+		for (int i = 0; i < misspelt_count; i++) {
+			count = 0;
+			min = editDistance.score(misspelt[i], matched[i][count]);
+			for (int j = position[i] + 1; j < size_of_dict; j++) {
+				dist = editDistance.score(misspelt[i], dict[j]);
+				if (min == dist) {
+					count++;
+					matched[i][count] = dict[j];
+				}
+			}
+		}
+		
+		double right = 0.0, sum = 0.0;
+		char result;
+		//Calculate precision
+		System.out.format("%-20s %-20s %-20s %-5s%n%n", "Misspelt", "Predicted", "Correct", "Match");
+		for (int i = 0; i < misspelt_count; i++) {
+			count = 0;
+			while (matched[i][count] !=  null) {
+				if (corrected[i].equals(matched[i][count])) {
+					right = right + 1.0;
+					result = 'Y';
+				} else {
+					result = 'N';
+				}
+				sum = sum + 1.0;
+				System.out.format("%-20s %-20s %-20s %-7c%n", misspelt[i], matched[i][count], corrected[i], result);
+				count++;
+			}
+		}
+		
+		long stopTime = System.currentTimeMillis(); //stop timer
+		long elapsedTime = stopTime - startTime; //record time taken
+		double seconds = (double) elapsedTime / 1000;
+		
+		double precision = right/sum;
+		double recall = right/misspelt_count;
+		double avg_pred = sum/misspelt_count;
+		
+		System.out.format("Precision: %.4f%n", precision);
+		System.out.format("Recall: %.4f%n", recall);
+		System.out.format("Average Predictions: %.4f%n", avg_pred);
+		System.out.format("Time Elapsed: %.1f%n", seconds);
+		
+		System.setOut(System.out);
+	}
+	
+	public static void calculatebiGram(String[] misspelt, String[] dict, String[] corrected, int misspelt_count,
+			int correct_count, int size_of_dict) {
+		
+		try {
+			System.setOut(new PrintStream(new FileOutputStream("output/multi/biGram-output.txt")));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		long startTime = System.currentTimeMillis(); //start timer
+		
+		int count;
+		double dist, min;
+		
+		NGramDistance editDistance = new NGramDistance();
+		
+		String matched[][] = new String[TOTAL_WORDS][TOTAL_WORDS];
+		int position[] = new int[misspelt_count];
+		
+		//Calculates the biGram distance between each mis-spelt word and dictionary entry
+		for (int i = 0; i < misspelt_count; i++) {
+			min = editDistance.score(misspelt[i], dict[0]);
+			position[i] = 0;
+			for (int j = 1; j < size_of_dict; j++) {
+				dist = editDistance.score(misspelt[i], dict[j]);
+				//Record best match
+				if (min > dist) {
+					matched[i][0] = dict[j];
+					min = dist;
+					position[i] = j;
+				}
+			}
+		}
+		
+		//Find all other best matches
+		for (int i = 0; i < misspelt_count; i++) {
+			count = 0;
+			min = editDistance.score(misspelt[i], matched[i][count]);
+			for (int j = position[i] + 1; j < size_of_dict; j++) {
+				dist = editDistance.score(misspelt[i], dict[j]);
+				if (min == dist) {
+					count++;
+					matched[i][count] = dict[j];
+				}
+			}
+		}
+		
+		double right = 0.0, sum = 0.0;
+		char result;
+		//Calculate precision
+		System.out.format("%-20s %-20s %-20s %-5s%n%n", "Misspelt", "Predicted", "Correct", "Match");
+		for (int i = 0; i < misspelt_count; i++) {
+			count = 0;
+			while (matched[i][count] !=  null) {
+				if (corrected[i].equals(matched[i][count])) {
+					right = right + 1.0;
+					result = 'Y';
+				} else {
+					result = 'N';
+				}
+				sum = sum + 1.0;
+				System.out.format("%-20s %-20s %-20s %-7c%n", misspelt[i], matched[i][count], corrected[i], result);
+				count++;
+			}
+		}
+		
+		long stopTime = System.currentTimeMillis(); //stop timer
+		long elapsedTime = stopTime - startTime; //record time taken
+		double seconds = (double) elapsedTime / 1000;
+		
+		double precision = right/sum;
+		double recall = right/misspelt_count;
+		double avg_pred = sum/misspelt_count;
+		System.out.format("Precision: %.4f%n", precision);
+		System.out.format("Recall: %.4f%n", recall);
+		System.out.format("Average Predictions: %.4f%n", avg_pred);
+		System.out.format("Time Elapsed: %.1f%n", seconds);
+		
+		System.setOut(System.out);
+	}
+	
+	public static void calculatetriGram(String[] misspelt, String[] dict, String[] corrected, int misspelt_count,
+			int correct_count, int size_of_dict) {
+		
+		try {
+			System.setOut(new PrintStream(new FileOutputStream("output/multi/triGram-output.txt")));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		long startTime = System.currentTimeMillis(); //start timer
+		
+		int count;
+		double dist, min;
+		
+		NGramDistance editDistance = new NGramDistance(3);
+		
+		String matched[][] = new String[TOTAL_WORDS][TOTAL_WORDS];
+		int position[] = new int[misspelt_count];
+		
+		//Calculates the Levenshtein distance between each mis-spelt word and dictionary entry
+		for (int i = 0; i < misspelt_count; i++) {
+			min = editDistance.score(misspelt[i], dict[0]);
+			for (int j = 1; j < size_of_dict; j++) {
+				dist = editDistance.score(misspelt[i], dict[j]);
+				//Record best match
+				if (min > dist) {
+					matched[i][0] = dict[j];
+					min = dist;
+					position[i] = j;
+				}
+			}
+		}
+		
+		//Find all other best matches
+		for (int i = 0; i < misspelt_count; i++) {
+			count = 0;
+			min = editDistance.score(misspelt[i], matched[i][count]);
+			for (int j = position[i] + 1; j < size_of_dict; j++) {
+				dist = editDistance.score(misspelt[i], dict[j]);
+				if (min == dist) {
+					count++;
+					matched[i][count] = dict[j];
+				}
+			}
+		}
+		
+		double right = 0.0, sum = 0.0;
+		char result;
+		//Calculate precision
+		System.out.format("%-20s %-20s %-20s %-5s%n%n", "Misspelt", "Predicted", "Correct", "Match");
+		for (int i = 0; i < misspelt_count; i++) {
+			count = 0;
+			while (matched[i][count] !=  null) {
+				if (corrected[i].equals(matched[i][count])) {
+					right = right + 1.0;
+					result = 'Y';
+				} else {
+					result = 'N';
+				}
+				sum = sum + 1.0;
+				System.out.format("%-20s %-20s %-20s %-7c%n", misspelt[i], matched[i][count], corrected[i], result);
+				count++;
+			}
+		}
+		
+		long stopTime = System.currentTimeMillis(); //stop timer
+		long elapsedTime = stopTime - startTime; //record time taken
+		double seconds = (double) elapsedTime / 1000;
+		
+		double precision = right/sum;
+		double recall = right/misspelt_count;
+		double avg_pred = sum/misspelt_count;
+		System.out.format("Precision: %.4f%n", precision);
+		System.out.format("Recall: %.4f%n", recall);
+		System.out.format("Average Predictions: %.4f%n", avg_pred);
+		System.out.format("Time Elapsed: %.1f%n", seconds);
+		
+		System.setOut(System.out);
+	}
+	
+	public static void calculateHybrid(String[] misspelt, String[] dict, String[] corrected, int misspelt_count,
+			int correct_count, int size_of_dict) {
+		
+		try {
+			System.setOut(new PrintStream(new FileOutputStream("output/multi/Hybrid-output.txt")));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		long startTime = System.currentTimeMillis(); //start timer
+		
+		int count;
+		double dist, min;
+		
+		Damerau editDistance = new Damerau();
+		
+		String matched[][] = new String[TOTAL_WORDS][TOTAL_WORDS];
+		int position[] = new int[misspelt_count];
+		
+		//Calculates the Levenshtein distance between each mis-spelt word and dictionary entry
+		for (int i = 0; i < misspelt_count; i++) {
+			min = editDistance.score(misspelt[i], dict[0]);
+			matched[i][0] = dict[0];
+			for (int j = 1; j < size_of_dict; j++) {
+				dist = editDistance.score(misspelt[i], dict[j]);
+				//Record best match
+				if (min > dist) {
+					matched[i][0] = dict[j];
+					min = dist;
+					position[i] = j;
+				}
+			}
+		}
+		
+		//Find all other best matches
+		for (int i = 0; i < misspelt_count; i++) {
+			count = 0;
+			min = editDistance.score(misspelt[i], matched[i][count]);
+			for (int j = position[i] + 1; j < size_of_dict; j++) {
+				dist = editDistance.score(misspelt[i], dict[j]);
+				if (min == dist) {
+					count++;
+					matched[i][count] = dict[j];
+				}
+			}
+		}
+		
+		NGramDistance anothereditDistance = new NGramDistance();
+		String bestmatches[][] = new String[TOTAL_WORDS][TOTAL_WORDS];
+		
+		for (int i = 0; i < misspelt_count; i++) {
+			count = 0;
+			min = anothereditDistance.score(misspelt[i], matched[i][count]);
+			bestmatches[i][0] = matched[i][count];
+			while(matched[i][++count] != null) {
+				dist = anothereditDistance.score(misspelt[i], matched[i][count]);
+				if (min > dist) {
+					bestmatches[i][0] = matched[i][count];
+					min = dist;
+					position[i] = count;
+				}
+			}	
+		}
+		
+		int j;
+		//Find all other best matches
+		for (int i = 0; i < misspelt_count; i++) {
+			count = 0;
+			min = anothereditDistance.score(misspelt[i], bestmatches[i][count]);
+			j = position[i];
+			while (matched[i][++j] != null) {
+				dist = anothereditDistance.score(misspelt[i], matched[i][j]);
+				if (min == dist) {
+					count++;
+					bestmatches[i][count] = matched[i][count];
+				}
+				j++;
+			}
+		}
+		
+		double right = 0.0, sum = 0.0;
+		char result;
+		//Calculate precision
+		System.out.format("%-20s %-20s %-20s %-5s%n%n", "Misspelt", "Predicted", "Correct", "Match");
+		for (int i = 0; i < misspelt_count; i++) {
+			count = 0;
+			while (matched[i][count] !=  null) {
+				if (corrected[i].equals(matched[i][count])) {
+					right = right + 1.0;
+					result = 'Y';
+				} else {
+					result = 'N';
+				}
+				sum = sum + 1.0;
+				System.out.format("%-20s %-20s %-20s %-7c%n", misspelt[i], matched[i][count], corrected[i], result);
+				count++;
+			}
+		}
+		
+		long stopTime = System.currentTimeMillis(); //stop timer
+		long elapsedTime = stopTime - startTime; //record time taken
+		double seconds = (double) elapsedTime / 1000;
+		
+		double precision = right/sum;
+		double recall = right/misspelt_count;
+		double avg_pred = sum/misspelt_count;
+		System.out.format("Precision: %.4f%n", precision);
+		System.out.format("Recall: %.4f%n", recall);
+		System.out.format("Average Predictions: %.4f%n", avg_pred);
+		System.out.format("Time Elapsed: %.1f%n", seconds);
+		
+		System.setOut(System.out);
+	}
+}

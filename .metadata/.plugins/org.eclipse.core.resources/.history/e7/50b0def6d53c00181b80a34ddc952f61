@@ -1,0 +1,85 @@
+/**
+ * The following code is designed by by Bosco Feng for use in COMP90041 Project 1: 
+ * waht wierd spelings! aer peaple carzy? in line with the N-gram Distance methodology 
+ * described in the lectures. It was inspired from a code written by Ralph Rice to 
+ * calculate Sorenson's Dice coefficient, accessible from https://git.io/vxdLY.
+ */
+
+import java.util.ArrayList;
+
+/**
+ * A method that uses N-gram Distance to calculate the distance between two strings.
+ * 
+ * @see the lecture on approximate string matching for the description of N-gram Distance
+ */
+public class NGramDistance {
+	/**
+	 * Calculates the similarity score of objects. 0.0 implies absolutely no similarity
+	 * and 1.0 implies absolute similarity.
+	 * 
+	 * @param s0 The first string to compare.
+	 * @param s1 The second string to compare.
+	 * @return A number between 0.0 and 1.0.
+	 */
+	private static final int DEFAULT_N = 2;
+	private final int n;
+	
+	public NGramDistance(final int n) {
+		this.n = n;
+	}
+	
+	public NGramDistance() {
+		this.n = DEFAULT_N;
+	}
+	
+	public double score(String s0, String s1) {
+	
+		// Create the character ngrams
+		ArrayList<String> l0 = splitIntoNgrams(s0);
+		ArrayList<String> l1 = splitIntoNgrams(s1);
+	
+		// Find the number of elements in each set.
+		int n1 = l0.size();
+		int n2 = l1.size();
+
+		// Find the intersection
+		l0.retainAll(l1);
+		l1.retainAll(l0);
+		//remove duplicates
+		int nt = Math.min(l0.size(), l1.size());
+		
+		
+		// The coefficient is: D = | s0 | + | s1 | - 2 ∙ | s0 ⋂ s1 | 
+		return ((double)(n1 + n2) - 2.0 * (double)nt);
+	}
+
+	
+	private ArrayList<String> splitIntoNgrams(String s) {
+		ArrayList<String> ngrams = new ArrayList<String>();
+	
+		if (s.length() < n) {
+			ngrams.add(s);
+		} else {
+			StringBuilder firstGram = new StringBuilder();
+			firstGram.append("#");
+			for (int i = 0; i < n - 1; i++) {
+				firstGram.append(s.charAt(i));
+			}
+			ngrams.add(firstGram.toString());
+			for (int i = 0; i < s.length() - n + 1; i++) {
+				StringBuilder sb = new StringBuilder();
+				for (int j = 0; j < n; j++) {
+					sb.append(s.charAt(i+j));
+				}
+				ngrams.add(sb.toString());
+			}
+			StringBuilder lastGram = new StringBuilder();
+			for (int j = s.length()- n + 1; j < s.length(); j++) {
+				lastGram.append(s.charAt(j));
+			}
+			lastGram.append("#");
+			ngrams.add(lastGram.toString());
+		}
+		return ngrams;
+	}
+}

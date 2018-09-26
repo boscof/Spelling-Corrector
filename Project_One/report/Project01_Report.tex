@@ -1,0 +1,172 @@
+\documentclass[11pt]{article}
+\usepackage{colacl}
+\usepackage{url}
+\usepackage[section]{placeins}
+\usepackage{pifont}
+
+\sloppy
+
+
+
+\title{COMP90049 Project 1 Report \\
+waht wierd spelings! aer peaple carzy?}
+\author{Anonymous}
+
+
+\begin{document}
+\maketitle
+
+
+%\begin{abstract}
+%This is a \LaTeX\ sample for your paper.
+%\end{abstract}
+
+\section{Introduction}
+
+The aim of this report is to evaluate the effectiveness of different spelling correction methods, namely Global Edit Distance (GED) and N-gram distance and similarity, on identifying the intended spelling of headwords taken from UrbanDictionary \footnote{http://urbandictionary.com}.
+
+\section{Dataset}
+The dataset has been taken from UrbanDictionary and curated for use by \newcite{saphra2016evaluating}. The dataset refers to three separate lists of words written in the English language. The first list contains 716 headwords that have been identified as being misspelt. The second list contains the correct spelling and the third list includes around 400,000 tokens from the English language.
+
+
+\section{Evaluation Methodology}
+Throughout this report, each spelling correction method will be evaluated across four criteria:
+\begin{itemize}
+	\item \textbf{Accuracy:} Fraction of correct responses for methods that only yield one prediction.
+	\item \textbf{Precision:} Fraction of correct responses for methods that yield multiple predictions.
+	\item \textbf{Recall:} Proportion of words with a correct response among the predictions yielded.
+	\item \textbf{Time:} Seconds taken for the method to complete.
+\end{itemize}
+Accuracy is important because the principal concern of any spelling correction method is correctness. If a method were to yield a single predicted result, then that result should be correct. Precision is important when multiple results are equidistant from the misspelt word. Recall is important when the correct spelling can be resolved in the case of multiple predictions i.e. when a human user can confirm the intended spelling of a word. Finally, time is important because certain applications might be time sensitive i.e. instant messaging. Note that time is affected by the size of the dictionary more than method.
+
+\section{Methodology and Algorithms}
+This report assesses the effectiveness of 5 spelling correction methods. The first is Levenshtein's GED (L-GED)\cite{levenshtein1966binary}. The second is another variant of GED named Damerau-Levenshtein's GED (DL-GED) \cite{damerau1964technique}. The third is the N-gram Distance method (N-gram) \cite{kondrak2005n} and the fourth and fifth are Hybrid methods combining GED and N-gram. All algorithms with the exception of N-gram Distance, use Thibault Debatty and Paul Irwin's stringsimilarity library which is written in java \cite{tdebatty2017}. The algorithm for N-gram was inspired by Ralph Rice's Sorenson's dice coefficient algorithm \cite{rrice2013}.
+
+\subsection{Global Edit Distance}
+The initial GED uses Levenshtein's parameters (m,i,d,r) = (0,1,1,1) to calculate the edit distance between each misspelt word and each entry in the dictionary \cite{levenshtein1966binary}. DL-GED is another variant of GED and distinguishes itself from L-GED by including transpositions in the set of possible operations \cite{damerau1964technique}.
+
+Using \textbf{and} as \textbf{adn} in the dataset as an example, L-GED(adn, and) = 2 whereas DL-GED(adn, and) = 1. Transposition errors can be considered as 1 edit because they often result from rapid typing and DL-GED  was included to prevent the over-penalization of transposition errors.
+
+\subsection{N-gram Distance}
+A shortcoming of GED algorithms is their insensitivity to context \cite{kondrak2005n}. Because they are concerned with the analysis of unigrams, matching characters that are spread apart are treated identically to matching characters that are grouped together. Take L-GED(natural, counts) = 6 and L-GED(natural, contrary) = 6 as an example. Most people consider contrary to be a closer match to natural than counts (due to the 'ra' subsequence) whereas L-GED considers them to be equidistant. N-gram distance somewhat remedies this problem by comparing subsequences.
+
+However, due to N-gram's attention to sub-strings, it often loses sight of the bigger picture. It can miss strings that appear alike but lack common n-grams i.e. Verelan/Virilon and find perfect similarity in strings that are not identical i.e. Xanex/Nexan. To increase the sensitivity of N-gram Distance to characters at the beginning and ending of a string (characters that are important to human perception), a special character '\#' is added to the beginning and ending of every misspelt word.  Only results from the Bigram were included because it was the best performer among N-grams.
+
+\subsection{Hybrid Methods}
+From the discussion thus far, it is clear that GED suffers from weaknesses that are remedied by N-gram and vice versa. As a result, this paper proposes two Hybrid methods that combine GED and N-gram. Note that the tradeoff for adopting hybrid methods is time.
+ 
+\subsection{The Tiered Method}
+The Tiered method uses the DL-GED method to initially select the best matches. The N-gram method then selects the dictionary entries with the highest score from those matches. Because GED is expected to provide a better filter due to N-grams aggressive elimination, a Tiered method might offer the best of both worlds.
+\subsection{The Consensus Model}
+The Consensus method aggregates the scores from DL-GED and N-gram to select the best dictionary matches. If both GED and N-gram provide a suboptimal filter, then it would be better to aggregate the methods.
+
+\subsection{Other Methods Considered}
+A number of other methods were considered but omitted. Since we are interested in comparing words, Local Edit Distance is less relevant because it analyses subsequences. Phonetic methods like Soundex were not considered because the words were typed not spoken \cite{zobel1996phonetic}. While it could be argued that difficult to spell words such as drug names can be misspelt because of their phonetics, there is little evidence in the dataset to suggest that this might be the case.
+ 
+\section{Results}
+
+\begin{table}[h]
+ \begin{center}
+\begin{tabular}{|l|l|l|}
+      \hline
+      Method & Accuracy & Time(s) \\
+      \hline\hline
+      L-GED & 0.147 & 51.4 \\
+      DL-GED & 0.161 & 359.2 \\
+      Bigram  & 0.0879 & 194.7 \\
+      Tiered & 0.1844 & 590.6 \\
+      Consensus & 0.176 & 615.7 \\
+      \hline
+\end{tabular}
+\caption{Evaluation Criteria For Single Prediction Methods}\label{table1}
+ \end{center}
+\end{table}
+
+\begin{table}[h]
+ \begin{center}
+\begin{tabular}{|l|l|l|l|}
+      \hline
+      Method & Precision & Recall & Time(s)\\
+      \hline\hline
+      L-GED & 0.0458 & 0.3534 & 85.4 \\
+      DL-GED & 0.0548 & 0.4120 & 589.0 \\
+      Bigram & 0.0984 & 0.2123 & 347.8 \\
+	  Tiered & 0.1154 & 0.2318 & 588.9 \\
+	  Consensus & 0.1112 & 0.2277 & 962.9 \\    
+      \hline
+\end{tabular}
+\caption{Evaluation Criteria For Multi-Prediction Methods}\label{table2}
+ \end{center}
+\end{table}
+
+\begin{table}[h]
+ \begin{center}
+\begin{tabular}{|l|l|}
+      \hline
+      Method & Avg Predictions\\
+      \hline\hline
+      L-GED & 7.72 \\
+      DL-GED & 7.52 \\
+      Bigram & 2.16 \\
+	  Tiered & 2.01 \\
+	  Consensus & 2.05 \\    
+      \hline
+\end{tabular}
+\caption{Average Number of Predictions for Multi-Prediction Methods}\label{table2}
+ \end{center}
+\end{table}
+
+\section{Discussion}
+\subsection{GED methods outperform N-gram in recall but not accuracy and precision}
+GED methods such as L-GED and DL-GED outperform N-gram in terms of recall accuracy but suffer in terms of precision. This is likely the result of N-gram's 'short sightedness' discussed earlier; As a result of focusing on subsequences (of size n), N-gram aggressively eliminates other options whose characters may match but are further apart. The significantly lower number of average predictions (7.52 for DL-GED v.s. 2.00 for Bigram) is indicative of this occurring.
+
+\subsection{Padding penalises N-gram for shorter strings}
+Interestingly, padding penalises N-gram when it comes to comparing shorter strings. The following example is taken from the output from running N-gram distance. The misspelt word is \textbf{blar} and the correct word is \textbf{blah} which is present in the dictionary.
+
+\begin{table}[h]
+ \begin{center}
+\begin{tabular}{|l|l|}
+      \hline
+      Predicted & Correct?\\
+      \hline\hline
+      bar & \ding{55} \\
+      belar & \ding{55} \\
+      blair & \ding{55} \\
+	  blare & \ding{55} \\
+	  blart & \ding{55} \\ 
+	  blear & \ding{55} \\
+	  bolar & \ding{55} \\
+	  lar & \ding{55} \\   
+      \hline
+\end{tabular}
+\caption{Predicted words from Bigram}\label{table2}
+ \end{center}
+\end{table}
+
+Clearly, the padding is biasing the results in favour of words that begin with 'b' and end in 'r'. This problem is less significant for longer strings with more N-grams. It is also not present in GED methods where DL-GED and L-GED correctly predict \textbf{blah}.
+
+\subsection{Hybrid methods outperform in accuracy and precision but not recall}
+Hybrid models appear to improve in terms of precision and accuracy but are worse than GED methods in terms of recall. This is again likely the result of N-gram's aggressive elimination of alternative options as evidenced by the lower average number of predictions exhibited by the hybrid models.
+
+\subsection{Spelling correction methods are limited by the dictionary}
+There is little spelling correction methods can do when the correct word is absent from the referenced dictionary. In the dataset, there is a misspelt string \textbf{ofmg} where the correct string is \textbf{omfg}. All the methods discussed failed to identify the correct word because it is absent from the dictionary.
+
+\subsection{Spelling correction methods fail when the misspelt word is contained in the dictionary}
+Spelling correction methods are guaranteed to fail when the the misspelt word is contained in the dictionary. In the dataset, there is a misspelt string \textbf{oaky} where the correct string is \textbf{okay} but all the methods concluded that \textbf{oaky} was the correct spelling. A better method would take into account the commonality of a word. 
+
+\section{Potential Improvements}
+Potential improvements include:
+\begin{enumerate}
+\item The methods can be quickened by reducing the search space with neighbourhood search (NS). Since misspelt strings are unlikely to deviate more than 2 edits from the correct spelling, NS might reduce the time taken dramatically. This might make Hybrid methods more attractive.
+\item Dictionary entries can be further sorted based on their commonality. Recycling the earlier example, okay might be suggested as a replacement for oaky because it is more common. 
+\item Spelling correction methods can further take into account the position of keys on the keyboard. Methods could prioritise strings whose differing characters occupy neighbouring keys on the keyboard.
+\end{enumerate}
+\section{Conclusions}
+This report implements 5 spelling correction methods. The results show that GED methods are superior to N-gram and Hybrid methods in terms of recall. However, in situations where conflicts in predictions cannot be resolved, Hybrid methods provide a superior result due to their high precision. Ultimately, the results suffered because of deficiencies in the dictionary and it would be interesting to see what would have resulted with a better dictionary.
+
+\newpage
+\bibliographystyle{acl}
+\nocite{*}
+\bibliography{sample}
+
+\end{document}

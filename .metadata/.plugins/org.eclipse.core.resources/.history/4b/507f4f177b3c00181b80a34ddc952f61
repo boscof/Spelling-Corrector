@@ -1,0 +1,10 @@
+
+public class Test {
+    public static void main(String[] args) {
+    	String s0 = "acually";
+    	String s1 = "actudslly";
+    	NGramSimilarity test = new NGramSimilarity();
+    	double similarity = test.score(s0, s1);
+    	System.out.println(similarity);
+    }
+}

@@ -1,0 +1,59 @@
+\begin{thebibliography}{}
+
+\bibitem[\protect\citename{Damerau}1964]{damerau1964technique}
+Fred~J Damerau.
+\newblock 1964.
+\newblock A technique for computer detection and correction of spelling errors.
+\newblock {\em Communications of the ACM}, 7(3):171--176.
+
+\bibitem[\protect\citename{Debatty and Irwin}2017]{tdebatty2017}
+Thibault Debatty and Paul Irwin.
+\newblock 2017.
+\newblock java-string-similarity.
+\newblock
+  \url{https://github.com/tdebatty/java-string-similarity/tree/master/src/main/java/info/debatty/java/stringsimilarity}.
+
+\bibitem[\protect\citename{Kondrak}2005]{kondrak2005n}
+Grzegorz Kondrak.
+\newblock 2005.
+\newblock N-gram similarity and distance.
+\newblock In {\em International symposium on string processing and information
+  retrieval}, pages 115--126. Springer.
+
+\bibitem[\protect\citename{Levenshtein}1966]{levenshtein1966binary}
+Vladimir~I Levenshtein.
+\newblock 1966.
+\newblock Binary codes capable of correcting deletions, insertions, and
+  reversals.
+\newblock In {\em Soviet physics doklady}, volume~10, pages 707--710.
+
+\bibitem[\protect\citename{Needleman and Wunsch}1970]{needleman1970general}
+Saul~B Needleman and Christian~D Wunsch.
+\newblock 1970.
+\newblock A general method applicable to the search for similarities in the
+  amino acid sequence of two proteins.
+\newblock {\em Journal of molecular biology}, 48(3):443--453.
+
+\bibitem[\protect\citename{Rice}2013]{rrice2013}
+Ralph Rice.
+\newblock 2013.
+\newblock java-string-similarity.
+\newblock
+  \url{https://github.com/rrice/java-string-similarity/blob/master/src/main/java/net/ricecode/similarity/DiceCoefficientStrategy.java}.
+
+\bibitem[\protect\citename{Saphra and Lopez}2016]{saphra2016evaluating}
+Naomi Saphra and Adam Lopez.
+\newblock 2016.
+\newblock Evaluating informal-domain word representations with urbandictionary.
+\newblock {\em Proceedings of the 1st Workshop on Evaluating Vector-Sace
+  Representations for NLP}, pages 94--98.
+
+\bibitem[\protect\citename{Zobel and Dart}1996]{zobel1996phonetic}
+Justin Zobel and Philip Dart.
+\newblock 1996.
+\newblock Phonetic string matching: Lessons from information retrieval.
+\newblock In {\em Proceedings of the 19th annual international ACM SIGIR
+  conference on Research and development in information retrieval}, pages
+  166--172. ACM.
+
+\end{thebibliography}

@@ -1,0 +1,114 @@
+/**
+ * The following code is taken from https://git.io/vxdLY and was originally used 
+ * to calculate Sorenson's Dice coefficient. It has since been modified
+ * by Bosco Feng for use in COMP90041 Project 1: waht wierd spelings! aer peaple 
+ * carzy? in line with the N-gram Distance methodology described in the lectures
+ */
+
+/*
+ * Copyright (c) 2010 Ralph Allan Rice <ralph.rice@gmail.com>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ */
+
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.TreeSet;
+
+/**
+ * A method that uses N-gram Distance to calculate the distance between two strings.
+ * @see <a href="http://en.wikipedia.org/wiki/Dice%27s_coefficient">About Dice Coefficient</a>
+ * for the original algorithm
+ * @see the lecture on approximate string matching for the description of N-gram Distance
+ */
+public class NGramDistance {
+	/**
+	 * Calculates the similarity score of objects, where 0.0 implies absolutely no similarity
+	 * and 1.0 implies absolute similarity.
+	 * 
+	 * @param first The first string to compare.
+	 * @param second The second string to compare.
+	 * @return A number between 0.0 and 1.0.
+	 */
+	private static final int DEFAULT_N = 2;
+	private final int n;
+	
+	public NGramDistance(final int n) {
+		this.n = n;
+	}
+	
+	public NGramDistance() {
+		this.n = DEFAULT_N;
+	}
+	
+	public double score(String first, String second) {
+	
+		// Create two sets of character ngrams, one for each string.
+		ArrayList<String> s1 = splitIntoNgrams(first);
+		ArrayList<String> s2 = splitIntoNgrams(second);
+	
+		// Get the number of elements in each set.
+		int n1 = s1.size();
+		int n2 = s2.size();
+		System.out.println(s1);
+		System.out.println(s2);
+		System.out.println(n1);
+		System.out.println(n2);
+		
+		// Find the intersection, and get the number of elements in that set.
+		s1.retainAll(s2);
+		System.out.println(s1);
+		int nt = s1.size();
+		
+		
+		// The coefficient is: D = | s1 | + | s2 | - 2 ∙ | s1 ⋂ s2 | 
+		return ((double)(n1 + n2) - 2.0 * (double)nt);
+	}
+
+	
+	private ArrayList<String> splitIntoNgrams(String s) {
+		ArrayList<String> ngrams = new ArrayList<String>();
+	
+		if (s.length() < n) {
+			ngrams.add(s);
+		} else {
+			StringBuilder firstGram = new StringBuilder();
+			firstGram.append("#");
+			for (int i = 0; i < n - 1; i++) {
+				firstGram.append(s.charAt(i));
+			}
+			ngrams.add(firstGram.toString());
+			for (int i = 0; i < s.length() - n + 1; i++) {
+				StringBuilder sb = new StringBuilder();
+				for (int j = 0; j < n; j++) {
+					sb.append(s.charAt(i+j));
+				}
+				ngrams.add(sb.toString());
+			}
+			StringBuilder lastGram = new StringBuilder();
+			for (int j = s.length()- n + 1; j < s.length(); j++) {
+				lastGram.append(s.charAt(j));
+			}
+			lastGram.append("#");
+			ngrams.add(lastGram.toString());
+		}
+		return ngrams;
+	}
+}
